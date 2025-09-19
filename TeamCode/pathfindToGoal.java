@@ -150,8 +150,14 @@ public class pathfindToGoal extends LinearOpMode {
             telemetry.addData("Starting Position", startPosition);
             telemetry.update();
             waitForStart();
+            if (isStopRequested()) return;
+            Actions.runBlocking(
+                    new SequentialAction(
+                            tab.build();
+                            tab.endTrajectory().fresh().build();
+                    )
+            );
         }
-        if (isStopRequested()) return;
     }
 
     void tagToTelemetry(AprilTagDetection detection) {
