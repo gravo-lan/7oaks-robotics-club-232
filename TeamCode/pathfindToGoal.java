@@ -8,6 +8,7 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 
@@ -30,6 +31,7 @@ import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
+import java.util.ArrayList;
 
 @Config
 @Autonomous(name = "PATHFIND_TO_GOAL", group = "Autonomous")
@@ -38,6 +40,8 @@ public class pathfindToGoal extends LinearOpMode {
     OpenCvCamera camera;
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
     AprilTagDetection tagOfInterest = null;
+
+    static final double FEET_PER_METER = 3.28084;
 
     // Apriltag IDs for alliance goals
     int BLUE = 20;
@@ -52,7 +56,7 @@ public class pathfindToGoal extends LinearOpMode {
     @Override
     public void runOpMode() {
         // RR stuff
-        Pose2d initialPose = new Pose2d(); // !! add initial pose
+        Pose2d initialPose = new Pose2d(0,0,Math.toRadians(90)); // !! add initial pose
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
         int visionOutputPosition = 1;
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
@@ -83,7 +87,7 @@ public class pathfindToGoal extends LinearOpMode {
                 boolean tagFound = false;
 
                 for(AprilTagDetection tag : currentDetections) {
-                    if(tag.id == BLUE or tag.id == RED)
+                    if(tag.id == BLUE || tag.id == RED)
                     {
                         tagOfInterest = tag;
                         tagFound = true;
@@ -145,7 +149,7 @@ public class pathfindToGoal extends LinearOpMode {
             //AUTO
             TrajectoryActionBuilder tab = drive.actionBuilder(initialPose)
                     .setTangent(0)
-                    .splineToConstantHeading(Vector2d(tagOfInterest.pose.x,tagOfInterest.pose.y))
+                    .splineTo(new Vector2d(tagOfInterest.pose.x,tagOfInterest.pose.y),Math.PI/2);
             int startPosition = visionOutputPosition;
             telemetry.addData("Starting Position", startPosition);
             telemetry.update();
@@ -153,8 +157,8 @@ public class pathfindToGoal extends LinearOpMode {
             if (isStopRequested()) return;
             Actions.runBlocking(
                     new SequentialAction(
-                            tab.build();
-                            tab.endTrajectory().fresh().build();
+                            tab.build(),
+                            tab.endTrajectory().fresh().build()
                     )
             );
         }
